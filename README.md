@@ -1,5 +1,5 @@
 # Victron Virtual PV Inverter for almost any Shelly with power and energy measurement cabability
-A Node‑RED flow that converts Shelly 1PM / Shelly Plus 1PM power and energy telemetry into a Victron Virtual PV Inverter on Venus OS (GX devices).
+A Node‑RED flow that converts Shelly 1PM / Shelly Plus 1PM / Shelly Pro 1PM / ... power and energy telemetry into a Victron Virtual PV Inverter on Venus OS (GX devices).
 This allows Shelly‑based PV systems, booster chargers, or auxiliary DC/AC generation sources to appear in VRM, Remote Console, and GX dashboards exactly like a real PV inverter. Please [watch my video](https://youtu.be/_HkP70xJzSw) for a live demonstration and detailed explanation on this project.
 
 ## Installation
