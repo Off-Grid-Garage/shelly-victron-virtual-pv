@@ -6,7 +6,7 @@ This allows Shelly‑based PV systems, booster chargers, or auxiliary DC/AC gene
 
 1. Import the JSON flow into Node‑RED  
 2. Set your Shelly IP in the HTTP request node  
-3. Adjust `/DeviceInstance` if needed  
+3. Follow the instructions in the comments of the flow above each node 
 4. Deploy and reboot the GX device
 
 ### Shelly URL configuration (important)
