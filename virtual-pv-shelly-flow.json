@@ -1,0 +1,177 @@
+[
+    {
+        "id": "2583fcc133269a0b",
+        "type": "tab",
+        "label": "Virtual PV Inverter",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "inject_shelly_poll",
+        "type": "inject",
+        "z": "2583fcc133269a0b",
+        "name": "Poll Shelly",
+        "props": [],
+        "repeat": "10",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "2",
+        "topic": "",
+        "x": 130,
+        "y": 140,
+        "wires": [
+            [
+                "http_shelly_rpc"
+            ]
+        ]
+    },
+    {
+        "id": "http_shelly_rpc",
+        "type": "http request",
+        "z": "2583fcc133269a0b",
+        "name": "Shelly RPC",
+        "method": "GET",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://<ip-address>/status",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 350,
+        "y": 140,
+        "wires": [
+            [
+                "fn_extract_shelly"
+            ]
+        ]
+    },
+    {
+        "id": "fn_extract_shelly",
+        "type": "function",
+        "z": "2583fcc133269a0b",
+        "name": "Shelly → PV Inverter",
+        "func": "let d = msg.payload;\n\nlet power = 0;\nlet energy_kwh = 0;\nlet voltage = 0;\nlet current = 0;\n\n// -----------------------------\n// Shelly Gen‑1 (1PM, EM, 2.5)\n// -----------------------------\nif (d.meters && d.meters[0]) {\n    let m = d.meters[0];\n\n    if (typeof m.power === \"number\") {\n        power = m.power;\n    }\n    if (m.counters && typeof m.counters[0] === \"number\") {\n        energy_kwh = m.counters[0] / 1000;   // Wh → kWh\n    }\n\n    // Gen‑1 1PM does NOT measure voltage/current\n    if (typeof m.voltage === \"number\") {\n        voltage = m.voltage;\n    }\n    if (typeof m.current === \"number\") {\n        current = m.current;\n    }\n}\n\n// -----------------------------\n// Shelly Plus / Pro (RPC API)\n// -----------------------------\nif (typeof d.apower === \"number\") {\n    power = d.apower;\n}\nif (d.aenergy && typeof d.aenergy.total === \"number\") {\n    energy_kwh = d.aenergy.total / 1000;\n}\nif (typeof d.voltage === \"number\") {\n    voltage = d.voltage;\n}\nif (typeof d.current === \"number\") {\n    current = d.current;\n}\n\n// -----------------------------\n// Output to Virtual PV Inverter\n// -----------------------------\nmsg.payload = {\n    \"Ac/Power\": power,\n    \"Ac/Energy/Forward\": energy_kwh,\n    \"Ac/L1/Power\": power,\n    \"Ac/L1/Energy/Forward\": energy_kwh,\n    \"Ac/L1/Voltage\": voltage,\n    \"Ac/L1/Current\": current,\n    \"StatusCode\": 7\n};\n// -------------------------------------\n// Set a unique devide instance ID here\n// -------------------------------------\nmsg.payload[\"/DeviceInstance\"] = 102;\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 580,
+        "y": 140,
+        "wires": [
+            [
+                "7f8caadaa2a0eb7b"
+            ]
+        ]
+    },
+    {
+        "id": "7f8caadaa2a0eb7b",
+        "type": "victron-virtual",
+        "z": "2583fcc133269a0b",
+        "name": "Virtual PV Inverter",
+        "outputs": 1,
+        "device": "pvinverter",
+        "default_values": false,
+        "acload_nrofphases": 1,
+        "enable_s2support": false,
+        "battery_capacity": 25,
+        "include_battery_temperature": false,
+        "battery_voltage_preset": "24",
+        "battery_voltage_custom": 24,
+        "generator_type": "ac",
+        "generator_nrofphases": 1,
+        "include_engine_hours": false,
+        "include_starter_voltage": false,
+        "include_history_energy": false,
+        "grid_nrofphases": 1,
+        "include_motor_temp": false,
+        "include_controller_temp": false,
+        "include_coolant_temp": false,
+        "include_motor_rpm": true,
+        "include_motor_direction": true,
+        "position": "1",
+        "pvinverter_nrofphases": 1,
+        "switch_1_type": 1,
+        "switch_1_min": 0,
+        "switch_1_max": "",
+        "switch_1_initial": 0,
+        "switch_1_label": "",
+        "switch_1_unit": "",
+        "switch_1_step": 1,
+        "switch_1_customname": "",
+        "switch_1_group": "",
+        "switch_1_include_measurement": false,
+        "switch_1_rgb_color_wheel": false,
+        "switch_1_cct_wheel": false,
+        "switch_1_rgb_white_dimmer": false,
+        "fluid_type": 0,
+        "include_tank_battery": false,
+        "include_tank_temperature": false,
+        "tank_battery_voltage": 3.3,
+        "tank_capacity": 0.2,
+        "temperature_type": 2,
+        "include_humidity": false,
+        "include_pressure": false,
+        "include_temp_battery": false,
+        "temp_battery_voltage": 3.3,
+        "x": 820,
+        "y": 140,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "57e85d58e6f47417",
+        "type": "comment",
+        "z": "2583fcc133269a0b",
+        "name": "Set http request",
+        "info": "for Gen1 Shelly pm switches use the following URL and insert the IP of your device:\nhttp://<ip-address>/status\n\nfor Shelly devices Gen2 and newer use this URL and replace the IP accordingly:\nhttp://<ip-address>/rpc/Switch.GetStatus?id=0",
+        "x": 340,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "b88a91c9f7e4c449",
+        "type": "comment",
+        "z": "2583fcc133269a0b",
+        "name": "Set VRM ID",
+        "info": "Open the node and change the VRM Instance/ID at the end of the script. The example below assignes ID 102 to the Virtual PV Inverter\n\nmsg.payload[\"/DeviceInstance\"] = 102;",
+        "x": 570,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "985ed089aa336585",
+        "type": "comment",
+        "z": "2583fcc133269a0b",
+        "name": "Set Inverter Name + Position",
+        "info": "The name of this node will show up as the name of the Virtual PV Inverter in Victron.\nAlso set the position of the PV Inverter to AC-in or AC-out, depending where it is connected.",
+        "x": 820,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "652834b3d343c513",
+        "type": "comment",
+        "z": "2583fcc133269a0b",
+        "name": "Set Polling Frequency",
+        "info": "Change the polling frequency at the end of this node.",
+        "x": 120,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "b969b0906acbd91f",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "@victronenergy/node-red-contrib-victron": "1.6.64"
+        }
+    }
+]
